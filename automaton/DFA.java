@@ -223,8 +223,27 @@ class DFA {
         return sb.toString();
     }
 
+    public void parcoursTexte(String texte){
+        int etat = startState;
+        for (int i = 0; i < texte.length(); i++){
+            if (finalStates.contains(etat)){
+                System.out.println("Le texte est accepté par l'automate");
+                return;
+            }
+            char c = texte.charAt(i);
+            if (transitions.get(etat).containsKey((int) c)){
+                etat = transitions.get(etat).get((int) c);
+            }
+            else {
+                etat = startState;
+                continue;
+            }
+        }
+        System.out.println("Le texte n'est pas accepté par l'automate");
+    }   
+
     public static void main(String arg[]) throws Exception {
-    	RegEx.setRegEx("b|a|c*");
+    	RegEx.setRegEx("mia");
     	RegExTree tree = RegEx.parse();
     	
         NDFA ndfa = new NDFA();
@@ -236,6 +255,9 @@ class DFA {
 
         DFA minimizedDFA = dfa.minimize();
         System.out.println("Minimized DFA :\n" + minimizedDFA);
+
+        String text = "maman mamé mia ! mm maaah !";
+        dfa.parcoursTexte(text);
     }
    
 }

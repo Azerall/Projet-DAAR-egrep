@@ -63,7 +63,7 @@ public class KMP {
     }
 
     // Algorithme KMP pour rechercher un motif dans un texte
-    public static boolean rechercheKMP(String texte, String pattern) {
+    public static int rechercheKMP(String texte, String pattern) {
         int i = 0;  // index pour le texte
         int j = 0;  // index pour le pattern
 
@@ -73,7 +73,7 @@ public class KMP {
                 j++;
             }
             if (j == pattern.length()) {
-                return true;  // Motif trouvé
+                return i-j;  // Motif trouvé
             } else if (i < texte.length() && pattern.charAt(j) != texte.charAt(i)) {
                 if (j != 0) {
                     j = retenue[j];
@@ -85,7 +85,7 @@ public class KMP {
                 }
             }
         }
-        return false;  // Motif non trouvé
+        return -1;  // Motif non trouvé
     }
 
     // Fonction pour lire un fichier ligne par ligne et chercher un motif avec KMP
@@ -93,26 +93,14 @@ public class KMP {
         carryOver(pattern);
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            int lineNumber = 1;
 
             while ((line = br.readLine()) != null) {
                 // Recherche du motif dans la ligne courante avec KMP
-                if (rechercheKMP(line, pattern)) {
-                    System.out.println(line);
+                if (rechercheKMP(line, pattern) != -1) {
+                    System.out.println(lineNumber + ":" + line);
                 }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-     // Fonction pour lire tout le fichier et chercher un motif avec KMP en une fois
-     public static void searchInFileEntirely(String filePath, String pattern) {
-        try {
-            String content = new String(Files.readAllBytes(Paths.get(filePath)));  // Lire tout le fichier
-            if (rechercheKMP(content, pattern)) {
-                System.out.println("Motif trouvé dans le fichier.");
-            } else {
-                System.out.println("Motif non trouvé.");
+                lineNumber++;
             }
         } catch (IOException e) {
             e.printStackTrace();
