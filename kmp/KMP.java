@@ -4,7 +4,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 
 public class KMP {
 
@@ -73,7 +75,7 @@ public class KMP {
                 j++;
             }
             if (j == pattern.length()) {
-                return i-j;  // Motif trouvé
+                return i-j;  // Motif trouvé à l'index i-j
             } else if (i < texte.length() && pattern.charAt(j) != texte.charAt(i)) {
                 if (j != 0) {
                     j = retenue[j];
@@ -89,37 +91,109 @@ public class KMP {
     }
 
     // Fonction pour lire un fichier ligne par ligne et chercher un motif avec KMP
-    public static void searchInFile(String filePath, String pattern) {
-        carryOver(pattern);
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+    public static int searchInFile(File file, String pattern) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
-            int lineNumber = 1;
+            int nbLignes = 0;
 
             while ((line = br.readLine()) != null) {
                 // Recherche du motif dans la ligne courante avec KMP
-                if (rechercheKMP(line, pattern) != -1) {
-                    System.out.println(lineNumber + ":" + line);
-                }
-                lineNumber++;
+                rechercheKMP(line, pattern);
+                //if (rechercheKMP(line, pattern) != -1) System.out.println(nbLignes+1 + ":" + line);
+                nbLignes++;
             }
+
+            return nbLignes;
         } catch (IOException e) {
+            System.out.println("Une erreur s'est produite lors de la lecture du fichier : " + file.getName());
             e.printStackTrace();
         }
+        return 0;
     }
 
     public static void main(String[] args) {
-        /*String pattern = "mamamia";
-        String text = "maman mamé mia ! mm maaah !";
+        
+        String pattern = "azerty"; // Motif à chercher dans les fichiers
+        carryOver(pattern); // Calculer la retenue pour le motif
 
-        int[] retenue = calculRetenue(pattern);
-        System.out.println("LTS = " + tabToString(retenue));
+        File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
 
-        int[] carryOver = carryOver(pattern);
-        System.out.println("CarryOver = " + tabToString(carryOver));*/
+        String csvFile = "./kmp_results.csv"; // Chemin du fichier CSV de sortie
 
-        String chemin = "41011-0.txt";
-        String pattern = "Casey";
-        searchInFile(chemin, pattern);
+        // En-têtes des colonnes du fichier CSV
+        String[] headers = {
+                "Nombre de lignes", 
+                "Temps d'exécution",
+                "Consommation mémoire"
+        };
+
+        // Tableau pour stocker les données à écrire dans le fichier CSV
+        String[][] data;
+
+        // Formater les données
+        int nbLignes = 0;
+        long startTime, endTime, memoryBefore, memoryAfter;
+        double duration, consommation;
+        int i = 0;
+        int nbIterations = 100;
+
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
+            data = new String[files.length][3];
+            for (File file : files) {
+                if (file.canRead() && file.isFile()) {
+                    System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
+                    nbLignes = searchInFile(file, pattern);
+                    
+                    // Mesure du temps moyen en µs
+                    startTime = System.nanoTime();
+                    for (int j=0; j<nbIterations; j++) {
+                        searchInFile(file, pattern);
+                    }
+                    endTime = System.nanoTime();
+                    duration = (endTime - startTime) / 1000 / nbIterations;
+
+                    // Mesure de la consommation mémoire en octets
+                    System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
+                    memoryBefore = getMemoryUsage();
+                    searchInFile(file, pattern);
+                    memoryAfter = getMemoryUsage();
+                    consommation = memoryAfter - memoryBefore;
+                    
+                    // Stocker les résultats dans le tableau de données
+                    String[] row = {
+                        nbLignes+"", 
+                        duration+"",
+                        consommation+""
+                    };
+                    data[i] = row;
+                    i++;
+                }
+            }
+            // Créer le fichier CSV
+            try (FileWriter writer = new FileWriter(csvFile)) {
+                // Écriture des en-têtes dans le fichier CSV
+                writer.append(String.join(",", headers));
+                writer.append("\n");
+
+                // Écriture des données dans le fichier CSV
+                for (String[] row : data) {
+                    writer.append(String.join(",", row));
+                    writer.append("\n");
+                }
+
+                System.out.println("Fichier CSV créé avec succès.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Le répertoire n'existe pas ou n'est pas un répertoire.");
+        }
     }
 
+    // Méthode pour obtenir la quantité de mémoire utilisée par le programme
+    public static long getMemoryUsage() {
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
 }
