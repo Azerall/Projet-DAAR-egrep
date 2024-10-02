@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 class NDFA {
+    static final int DOT_INDEX = 256;
+
     private static int counterState = 0; // Un ID d'état unique pour chaque nouvel état
     int startState;
     int finalState;
@@ -37,9 +39,9 @@ class NDFA {
     @SuppressWarnings("unchecked")
     public NDFA treeToNDFA(RegExTree tree) {
         int nbStates = calculNbStates(tree);
-        transitions = new int[nbStates][256]; // 256 symboles possibles pour ASCII étendu
+        transitions = new int[nbStates][257]; // 256 symboles possibles pour ASCII étendu + 1 pour DOT
         for (int i = 0; i < nbStates; i++) {
-            for (int j = 0; j < 256; j++) {
+            for (int j = 0; j < 257; j++) {
                 transitions[i][j] = -1;
             }
         }
@@ -99,12 +101,19 @@ class NDFA {
             epsilonTransitions[oldFinal].add(oldStart);
             epsilonTransitions[oldFinal].add(finalState);
         } 
-        // Symbole
         else {
             this.startState = nextStateId();
             this.finalState = nextStateId();
-            transitions[startState][tree.root] = finalState;
-            symbols.add(tree.root);
+            // Dot (n'importe quel caractère)
+            if (tree.root == RegEx.DOT) {
+                transitions[startState][DOT_INDEX] = finalState;
+                symbols.add(DOT_INDEX);
+            }
+            // Symbole
+            else {
+                transitions[startState][tree.root] = finalState;
+                symbols.add(tree.root);
+            }
         }
     }
 
@@ -117,7 +126,11 @@ class NDFA {
             for (int symbol : symbols) {
                 int targetState = transitions[i][symbol];
                 if (targetState != -1) {
-                    sb.append("State ").append(i).append(" - ").append((char) symbol).append(" -> State ").append(targetState).append("\n");
+                    if (symbol == DOT_INDEX) {
+                        sb.append("State ").append(i).append(" - . -> State ").append(targetState).append("\n");
+                    } else {
+                        sb.append("State ").append(i).append(" - ").append((char) symbol).append(" -> State ").append(targetState).append("\n");
+                    }
                 }
             }
             if (!epsilonTransitions[i].isEmpty()) {

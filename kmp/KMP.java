@@ -99,7 +99,9 @@ public class KMP {
             while ((line = br.readLine()) != null) {
                 // Recherche du motif dans la ligne courante avec KMP
                 rechercheKMP(line, pattern);
-                //if (rechercheKMP(line, pattern) != -1) System.out.println(nbLignes+1 + ":" + line);
+                /*if (rechercheKMP(line, pattern) != -1) {
+                    System.out.println(nbLignes+1 + ":" + line);
+                }*/
                 nbLignes++;
             }
 
@@ -113,8 +115,10 @@ public class KMP {
 
     public static void main(String[] args) {
         
-        String pattern = "azerty"; // Motif à chercher dans les fichiers
+        String pattern = "to"; // Motif à chercher dans les fichiers
         carryOver(pattern); // Calculer la retenue pour le motif
+        System.out.println("Pattern = " + pattern);
+        System.out.println("CarryOver = " + tabToString(retenue) + "\n");
 
         File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
 
@@ -135,7 +139,7 @@ public class KMP {
         long startTime, endTime, memoryBefore, memoryAfter;
         double duration, consommation;
         int i = 0;
-        int nbIterations = 100;
+        int nbIterations = 50;
 
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
@@ -156,9 +160,11 @@ public class KMP {
                     // Mesure de la consommation mémoire en octets
                     System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
                     memoryBefore = getMemoryUsage();
-                    searchInFile(file, pattern);
+                    for (int j=0; j<nbIterations; j++) {
+                        searchInFile(file, pattern);
+                    }
                     memoryAfter = getMemoryUsage();
-                    consommation = memoryAfter - memoryBefore;
+                    consommation = memoryAfter - memoryBefore / nbIterations;
                     
                     // Stocker les résultats dans le tableau de données
                     String[] row = {

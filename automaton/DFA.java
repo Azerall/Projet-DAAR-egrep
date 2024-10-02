@@ -8,6 +8,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 
 class DFA {
     private static int stateId = 0; // Un ID d'état unique pour chaque nouvel état
@@ -216,36 +221,64 @@ class DFA {
             for (Map.Entry<Integer, Integer> targetEntry : transition.entrySet()) {
                 int symbol = targetEntry.getKey();
                 int targetState = targetEntry.getValue();
-                sb.append("State ").append(sourceState).append(" - ").append((char) symbol).append(" -> State ").append(targetState).append("\n");
+                if (symbol == NDFA.DOT_INDEX) {
+                    sb.append("State ").append(sourceState).append(" - . -> State ").append(targetState).append("\n");
+                } else {
+                    sb.append("State ").append(sourceState).append(" - ").append((char) symbol).append(" -> State ").append(targetState).append("\n");
+                }
             }
         }
 
         return sb.toString();
     }
 
-    public void parcoursTexte(String texte){
+    // Fonction pour parcourir un texte et vérifier s'il est accepté par l'automate
+    public boolean parcoursTexte(String texte){
         int etat = startState;
         for (int i = 0; i < texte.length(); i++){
             if (finalStates.contains(etat)){
-                System.out.println("Le texte est accepté par l'automate");
-                return;
+                return true;
             }
             char c = texte.charAt(i);
             if (transitions.get(etat).containsKey((int) c)){
                 etat = transitions.get(etat).get((int) c);
             }
-            else {
+            else if (transitions.get(etat).containsKey(NDFA.DOT_INDEX)){
+                etat = transitions.get(etat).get(NDFA.DOT_INDEX);
+            } else {
                 etat = startState;
                 continue;
             }
         }
-        System.out.println("Le texte n'est pas accepté par l'automate");
-    }   
+        return false;
+    }
+
+    // Fonction pour lire un fichier ligne par ligne et chercher un motif avec l'automate
+    public int searchInFile(File file) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int nbLignes = 0;
+
+            while ((line = br.readLine()) != null) {
+                parcoursTexte(line);
+                /*if (parcoursTexte(line)){
+                    System.out.println(nbLignes+1 + ":" + line);
+                }*/
+                nbLignes++;
+            }
+
+            return nbLignes;
+        } catch (IOException e) {
+            System.out.println("Une erreur s'est produite lors de la lecture du fichier : " + file.getName());
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     public static void main(String arg[]) throws Exception {
-    	RegEx.setRegEx("mia");
+    	RegEx.setRegEx("a.");
     	RegExTree tree = RegEx.parse();
-    	
+
         NDFA ndfa = new NDFA();
         ndfa.treeToNDFA(tree);
         System.out.println("NDFA :\n" + ndfa);
@@ -256,8 +289,87 @@ class DFA {
         DFA minimizedDFA = dfa.minimize();
         System.out.println("Minimized DFA :\n" + minimizedDFA);
 
-        String text = "maman mamé mia ! mm maaah !";
-        dfa.parcoursTexte(text);
+        File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
+
+        String csvFile = "./automaton_results.csv"; // Chemin du fichier CSV de sortie
+    	
+        // En-têtes des colonnes du fichier CSV
+        String[] headers = {
+            "Nombre de lignes", 
+            "Temps d'exécution",
+            "Consommation mémoire"
+        };
+
+        // Tableau pour stocker les données à écrire dans le fichier CSV
+        String[][] data;
+
+        // Formater les données
+        int nbLignes = 0;
+        long startTime, endTime, memoryBefore, memoryAfter;
+        double duration, consommation;
+        int i = 0;
+        int nbIterations = 50;
+
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
+            data = new String[files.length][3];
+            for (File file : files) {
+                if (file.canRead() && file.isFile()) {
+                    System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
+                    nbLignes = dfa.searchInFile(file);
+                    
+                    // Mesure du temps moyen en µs
+                    startTime = System.nanoTime();
+                    for (int j=0; j<nbIterations; j++) {
+                        dfa.searchInFile(file);
+                    }
+                    endTime = System.nanoTime();
+                    duration = (endTime - startTime) / 1000 / nbIterations;
+
+                    // Mesure de la consommation mémoire en octets
+                    System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
+                    memoryBefore = getMemoryUsage();
+                    for (int j=0; j<nbIterations; j++) {
+                        dfa.searchInFile(file);
+                    }
+                    memoryAfter = getMemoryUsage();
+                    consommation = memoryAfter - memoryBefore / nbIterations;
+                    
+                    // Stocker les résultats dans le tableau de données
+                    String[] row = {
+                        nbLignes+"", 
+                        duration+"",
+                        consommation+""
+                    };
+                    data[i] = row;
+                    i++;
+                }
+            }
+            // Créer le fichier CSV
+            try (FileWriter writer = new FileWriter(csvFile)) {
+                // Écriture des en-têtes dans le fichier CSV
+                writer.append(String.join(",", headers));
+                writer.append("\n");
+
+                // Écriture des données dans le fichier CSV
+                for (String[] row : data) {
+                    writer.append(String.join(",", row));
+                    writer.append("\n");
+                }
+
+                System.out.println("Fichier CSV créé avec succès.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Le répertoire n'existe pas ou n'est pas un répertoire.");
+        }
     }
-   
+
+    // Méthode pour obtenir la quantité de mémoire utilisée par le programme
+    public static long getMemoryUsage() {
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+    
 }
