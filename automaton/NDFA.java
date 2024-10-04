@@ -12,9 +12,13 @@ class NDFA {
     int startState;
     int finalState;
 
-    int[][] transitions;
-    ArrayList<Integer>[] epsilonTransitions;
+    int[][] transitions; // Tableau de transitions pour chaque état
+    ArrayList<Integer>[] epsilonTransitions; // Tableau de transitions epsilon pour chaque état
     List<Integer> symbols = new ArrayList<>();
+
+    public NDFA() {
+        counterState = 0;
+    }
     
     private static int nextStateId() {
         return counterState++;
@@ -24,6 +28,7 @@ class NDFA {
         return symbols;
     }
 
+    // Calcul du nombre d'états de l'automate
     private int calculNbStates(RegExTree tree) {
         if (tree.root == RegEx.CONCAT) { // La concaténation ne rajoute pas d'état
             return calculNbStates(tree.subTrees.get(0)) + calculNbStates(tree.subTrees.get(1));
@@ -36,6 +41,7 @@ class NDFA {
         }
     }
 
+    // Convertit un arbre de syntaxe en automate fini non déterministe
     @SuppressWarnings("unchecked")
     public NDFA treeToNDFA(RegExTree tree) {
         int nbStates = calculNbStates(tree);
