@@ -6,12 +6,25 @@ public class Egrep {
     public static void main(String[] args) {
 
         // Motif à chercher pour les tests sur le temps d'exécution
-        String pattern = "(a|b)*c";
+        String pattern = ".";
+        //String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
-        String patterns[] = {"a", "ab", "abcd", "abcdefgh", "abcdefghijklmnop", "abcdefghijklmnopqrstuvwxyz", 
-            "abcdefghijklmnopqrstuvwxyz123456abcdefghijklmnopqrstuvwxyz123456",
-            "a|b", "(a|b)*c", "(a|b)*c(d|e)"
+        String patterns[] = {
+            "a",
+            "abc",
+            "abcdef",
+            "abcdefgh",
+            "abcdefghijkl",
+            "abcdefghijklmnop",
+            "abcdefghijklmnopqrstuv",
+            "abcdefghijklmnopqrstuvwxyz",
+            "abcdefghijklmnopqrstuvwxyz123456",
+            "abcdefghijklmnopqrstuvwxyz1234567890",
+            "abcdefghijklmnopqrstuvwxyz1234567890&éèàç",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmno",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890"
         };
 
         File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
@@ -44,7 +57,8 @@ public class Egrep {
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
 
-            dataTime = new String[files.length][2];
+            // Mesure du temps moyen en µs
+            /*dataTime = new String[files.length][2];
             for (File file : files) {
                 if (file.canRead() && file.isFile()) {
                     System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
@@ -52,7 +66,6 @@ public class Egrep {
                     // Compter le nombre de lignes dans le fichier
                     nbLignes = countLinesInFile(file);
 
-                    // Mesure du temps moyen en µs
                     startTime = System.nanoTime();
                     for (int j=0; j<nbIterations; j++) {
                         executeEgrep(file.getAbsolutePath(), pattern);
@@ -82,21 +95,19 @@ public class Egrep {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
 
+            // Mesure de la consommation mémoire moyen en octets
             dataMemory = new String[patterns.length][2];
             for (int j = 0; j < patterns.length; j++) {
                 System.out.println("Pattern " + (j+1) + "/" + patterns.length + " : "+ patterns[j]);
 
-                // Mesure de la consommation mémoire moyen en octets
-                System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
-                memoryBefore = getMemoryUsage();
+                consommation = 0;
                 for (int k=0; k<nbIterations; k++) {
-                    executeEgrep(files[0].getAbsolutePath(), pattern);
+                    consommation += executeEgrep(files[0].getAbsolutePath(), pattern);
                 }
-                memoryAfter = getMemoryUsage();
-                consommation = memoryAfter - memoryBefore / nbIterations;
-                
+                consommation /= nbIterations;
+
                 // Stocker les résultats dans le tableau de données
                 String[] row = {
                     patterns[j].length()+"", 
@@ -139,11 +150,15 @@ public class Egrep {
         return lines;
     }
 
-    // Méthode pour exécuter la commande egrep
-    public static void executeEgrep(String filePath, String pattern) {
+    // Méthode qui éxecute la commande egrep et renvoie la consommation mémoire
+    public static long executeEgrep(String filePath, String pattern) {
         try {
             ProcessBuilder pb = new ProcessBuilder("egrep", pattern, filePath);
             pb.redirectErrorStream(true); // Rediriger les erreurs vers la sortie standard
+
+            System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
+            long memoryBefore = getMemoryUsage();
+
             Process process = pb.start();
 
             // Lire la sortie (facultatif)
@@ -159,9 +174,11 @@ public class Egrep {
             }
 
             reader.close();
+            return getMemoryUsage() - memoryBefore;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        return 0;
     }
 
     // Méthode pour obtenir la quantité de mémoire utilisée par le programme

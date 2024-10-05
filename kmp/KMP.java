@@ -117,11 +117,25 @@ public class KMP {
     public static void main(String[] args) {
         
         // Motif à chercher pour les tests sur le temps d'exécution
-        String pattern = "azerty";
+        String pattern = " ";
+        //String pattern = "abcdefghijklmnopqrstuvwxyz";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
-        String patterns[] = {"a", "ab", "abcd", "abcdefgh", "abcdefghijklmnop", "abcdefghijklmnopqrstuvwxyz", 
-            "abcdefghijklmnopqrstuvwxyz123456abcdefghijklmnopqrstuvwxyz123456",
+        String patterns[] = {
+            "a",
+            "abc",
+            "abcdef",
+            "abcdefgh",
+            "abcdefghijkl",
+            "abcdefghijklmnop",
+            "abcdefghijklmnopqrstuv",
+            "abcdefghijklmnopqrstuvwxyz",
+            "abcdefghijklmnopqrstuvwxyz123456",
+            "abcdefghijklmnopqrstuvwxyz1234567890",
+            "abcdefghijklmnopqrstuvwxyz1234567890&éèàç",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmno",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz",
+            "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890"
         };
 
         File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
@@ -155,7 +169,7 @@ public class KMP {
             File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
 
             // Mesure du temps moyen en µs
-            dataTime = new String[files.length][2];
+            /*dataTime = new String[files.length][2];
             for (File file : files) {
                 if (file.canRead() && file.isFile()) {
                     System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
@@ -190,19 +204,21 @@ public class KMP {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
 
             // Mesure de la consommation mémoire moyen en octets
             dataMemory = new String[patterns.length][2];
             for (int j = 0; j < patterns.length; j++) {
                 System.out.println("Pattern " + (j+1) + "/" + patterns.length + " : "+ patterns[j]);
 
-                System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
-                memoryBefore = getMemoryUsage();
+                memoryBefore = 0;
+                memoryAfter = 0;
                 for (int k=0; k<nbIterations; k++) {
+                    System.gc(); // Forcer l'exécution du garbage collector avant de prendre des mesures
+                    memoryBefore += getMemoryUsage();
                     searchInFile(files[0], patterns[j]);
+                    memoryAfter += getMemoryUsage();
                 }
-                memoryAfter = getMemoryUsage();
                 consommation = memoryAfter - memoryBefore / nbIterations;
                 
                 // Stocker les résultats dans le tableau de données
