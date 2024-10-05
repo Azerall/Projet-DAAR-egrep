@@ -1,3 +1,5 @@
+package egrep;
+
 import java.io.*;
 import java.util.*;
 
@@ -6,8 +8,8 @@ public class Egrep {
     public static void main(String[] args) {
 
         // Motif à chercher pour les tests sur le temps d'exécution
-        String pattern = ".";
-        //String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
+        //String pattern = ".";
+        String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
         String patterns[] = {
@@ -27,11 +29,11 @@ public class Egrep {
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890"
         };
 
-        File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
+        File dir = new File("./testbeds"); // Répertoire contenant les fichiers à lire
         
         // Chemin des fichiers CSV de sortie
-        String csvFileTime = "./egrep_time_results.csv";
-        String csvFileMemory = "./egrep_memory_results.csv";
+        String csvFileTime = "./egrep/egrep_time_results.csv";
+        String csvFileMemory = "./egrep/egrep_memory_results.csv";
     	
         // En-têtes des colonnes du fichier CSV
         String[] headersTime = {
@@ -58,7 +60,7 @@ public class Egrep {
             File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
 
             // Mesure du temps moyen en µs
-            /*dataTime = new String[files.length][2];
+            dataTime = new String[files.length][2];
             for (File file : files) {
                 if (file.canRead() && file.isFile()) {
                     System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
@@ -95,7 +97,7 @@ public class Egrep {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }*/
+            }
 
             // Mesure de la consommation mémoire moyen en octets
             dataMemory = new String[patterns.length][2];

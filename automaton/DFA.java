@@ -1,3 +1,5 @@
+package automaton;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -291,8 +293,8 @@ class DFA {
     public static void main(String arg[]) throws Exception {
 
         // Motif à chercher pour les tests sur le temps d'exécution
-        String pattern = ".";
-        //String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
+        //String pattern = ".";
+        String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
         String patterns[] = {
@@ -312,11 +314,11 @@ class DFA {
             "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890"
         };
 
-        File dir = new File("../testbeds"); // Répertoire contenant les fichiers à lire
+        File dir = new File("./testbeds"); // Répertoire contenant les fichiers à lire
 
         // Chemin des fichiers CSV de sortie
-        String csvFileTime = "./automaton_time_results.csv";
-        String csvFileMemory = "./automaton_memory_results.csv";
+        String csvFileTime = "./automaton/automaton_time_results.csv";
+        String csvFileMemory = "./automaton/automaton_memory_results.csv";
     	
         // En-têtes des colonnes du fichier CSV
         String[] headersTime = {
@@ -343,7 +345,7 @@ class DFA {
             File[] files = dir.listFiles(); // Liste des fichiers dans le répertoire
 
             // Mesure du temps moyen en µs
-            /*dataTime = new String[files.length][2];
+            dataTime = new String[files.length][2];
             for (File file : files) {
                 if (file.canRead() && file.isFile()) {
                     System.out.println("Fichier " + (i+1) + "/" + files.length + " : "+ file.getName());
@@ -378,7 +380,7 @@ class DFA {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }*/
+            }
 
             // Mesure de la consommation mémoire moyen en octets
             dataMemory = new String[patterns.length][2];
