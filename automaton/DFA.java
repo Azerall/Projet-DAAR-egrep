@@ -293,8 +293,8 @@ class DFA {
     public static void main(String arg[]) throws Exception {
 
         // Motif à chercher pour les tests sur le temps d'exécution
-        //String pattern = ".";
-        String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
+        String pattern = ".";
+        //String pattern = "(a|j|k|p|z|b)*e*o(f|d|g|h|p)";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
         String patterns[] = {

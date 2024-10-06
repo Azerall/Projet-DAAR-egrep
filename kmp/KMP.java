@@ -119,8 +119,8 @@ public class KMP {
     public static void main(String[] args) {
         
         // Motif à chercher pour les tests sur le temps d'exécution
-        //String pattern = " ";
-        String pattern = "abcdefghijklmnopqrstuvwxyz";
+        String pattern = " ";
+        //String pattern = "abcdefghijklmnopqrstuvwxyz01234567890";
 
         // Tableau de motifs pour les tests sur la consommation mémoire
         String patterns[] = {
